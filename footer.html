@@ -147,24 +147,27 @@ function getCookie(cname) {
   return "";
 }
 
-function hideOptOutIfAnsweredPreviously() {
-  $('.bg--light-grey.padding--10.padding--h20').addClass('opted-in-statement');
-  jQuery('.opt-out-wrapper').hide();
+function hideOptOut() {
+  // hide opt out inputs
+  $('.opt-out-input, #custom1').hide();
   if (getCookie("guid")) {
     var guid = getCookie("guid");
     jQuery.getJSON("https://secure.greenpeace.org.uk/page/graph/loe/" + guid, function(graph) {
       
       var answeredOptIn = graph.group_phone_contact_opt_in;
       if (!answeredOptIn) {
-        jQuery('.opt-out-wrapper').show();
-        jQuery('.opted-in-statement').hide();
+        // show opt out inputs
+        console.log('not opted in');
+        $('.opt-out-input, #custom1').show();
       }
     });
   } else {
-    jQuery('.opt-out-wrapper').show();
-    jQuery('.opted-in-statement').hide();
+    // show opt out inputs
+    $('.opt-out-input, #custom1').show();
+    console.log('defaulting to not opted in');
   }
 }
+
 
 var variableExitsAndIsDefined = function(variable){
   if (typeof variable !== 'undefined' && variable) {
@@ -203,27 +206,33 @@ function elementLoaded(el) {
 };
 
 function movePrivacyStatement() {
-  var $newPrivacyContainer = $('.form-info__text.spacing--no-top').parent(),
-    $privacyStatement = $('.bg--light-grey.padding--10.padding--h20');
-
-  $newPrivacyContainer.html( $privacyStatement.show() );
-  // move country change to after state field
-  $('#state_cd-parent').parent().after($('#country-parent'));
-  $('#country-parent').css({
-    'text-align'    : 'left',
-    'margin-bottom' : '10px'
-  });
+  //$('#country-parent').after($('.bg--light-grey.padding--10.padding--h20'));
+  $customField = $('#custom1');
+  $('#country-parent').after($customField.parent());
   
+  // hide original statement
+  $('#contribution .form-info__text.spacing--no-top, .bg--light-grey.padding--10.padding--h20').hide();
+
+  // change opt out label html
+  var fieldName = $customField.attr('name');
+
+  // create new label
+  var label = 'If you sign up we’ll keep you updated about our campaigns and other ways you can help, by email, post, phone and text. We promise that we’ll never sell or swap your details and you can opt out at any time - check our <a href="http://www.greenpeace.org.uk/about/privacy-policy" target="_blank">privacy policy<\/a>. <span class="opt-out-input" style="display: inline;">And if you don’t want us to phone you, please tick this box.<input id="custom1" class="opt-out-field" name="custom1" type="checkbox" value="1"\/><\/span>';
+  
+  $customField.next().find('.fieldlabel').html(label).addClass('opt-out-cont');
+  $customField.remove(); // get rid of original custom field as we've added our own above
 };
 
 function runFinalWrapperCode() {
   // this is run when we know all js form elements are loaded
   movePrivacyStatement();
+  // hide opt out function
+  hideOptOut();
 }
 
 
 $(function(){
-
+  
   addUserSpecifiedContent();
   
     

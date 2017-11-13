@@ -1,0 +1,237 @@
+    </div> <!-- ./ user copy section -->
+  </div> 
+</body>
+
+<script>
+/* MAIN TEMPLATE JS */
+//are you using rapidata?
+var rapidata = true;
+// Direct Debit amounts
+var defaultDdAmountsArray = [ "10", "20", "50", "100", "200", "500", "1000" ];
+// Variable for direct debit url redirect
+var redirectUrl = 'https://secure.edirectdebit.com/Greenpeace/direct-debit/Desktop-Form-Page/';
+// Turn on / off direct debit
+var acceptdd = false;
+// Set single or monthly as default donation type
+var donationType = 'single';
+
+// Set unique identifier for error cookies
+var uniqueIdentifier = 'drs-petition-scroll';
+var Gfirstname = "";
+/* SET COOKIE FOR UPSELL SOURCE AND SUBSOURCE PASSTHROUGH */
+Passthrough.setCodes();
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+    }
+    return "";
+}
+
+  function encodeHTML(s) {
+      var t = s.replace(/&/g, '&amp;');
+      var u = t.replace(/[<]/g, '&lt;');
+      var v = u.replace(/"/g, '&quot;');
+      var w = v.replace(/[>]/g, '&gt;');
+      console.log(w);
+      return w;
+  }
+
+ function getParameterByName(name, url) {
+  if (!url) {
+    url = window.location.href;
+  }
+  name = name.replace(/[\[\]]/g, "\\$&");
+  //name = $( name );
+  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+  if (!results) return '';
+  if (!results[2]) return '';
+  //results[2] = $( results[2] );
+  var length = 30;
+  resultingString = encodeHTML(decodeURIComponent( results[2].replace(/\+/g, " ")));
+  return resultingString.substring(0, length);
+}
+
+
+function httpGetAsync(theUrl, callback)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
+           callback(xmlHttp.responseText);
+        } else {
+           console.log("bad http request"); 
+       }
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
+}
+
+function handleFirstname(graph){
+                  var grapher = JSON.parse(graph);  
+      var Gfirstname = grapher.firstname;
+                  if(Gfirstname != "" && typeof Gfirstname !== 'undefined'){
+                      $('#firstname-title').html(Gfirstname+", help protect our oceans!");
+                   }
+}
+
+
+
+  
+  console.log("cookied: "+Gfirstname);
+
+
+
+function ddamountsURL(){
+    var hasher = {};
+    if (window.location.hash) {
+      //console.log("in hash: " + window.location.hash);
+        var params = (decodeURIComponent(window.location.hash).substr(1)).split("&");
+
+        for (i = 0; i < params.length; i++)
+        {
+            var a = params[i].split("=");
+            // Add parameters to object
+            hasher[a[0]] = a[1];
+            //console.log("h[a[0]]: " + hasher[a[0]])        
+        }
+    }
+
+   if(hasher['src']){
+       testSource = hasher['src'];
+    }
+
+    var ddresult = [];
+    if(hasher['dd']){
+        ddresult = hasher['dd'].split('x');
+        amountsInUrl = true;
+    } else {
+        ddresult = [];
+    }
+    return ddresult;
+}
+
+
+
+    var amountArray = ddamountsURL();
+    for (i = 1; i <= defaultDdAmountsArray.length; i++) { 
+        if(i > amountArray.length){
+         var j = i-1;
+         var toAdd = defaultDdAmountsArray[j];
+         amountArray.push(toAdd);
+       }
+    }
+
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var ca = document.cookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+function hideOptOutIfAnsweredPreviously() {
+  $('.bg--light-grey.padding--10.padding--h20').addClass('opted-in-statement');
+  jQuery('.opt-out-wrapper').hide();
+  if (getCookie("guid")) {
+    var guid = getCookie("guid");
+    jQuery.getJSON("https://secure.greenpeace.org.uk/page/graph/loe/" + guid, function(graph) {
+      
+      var answeredOptIn = graph.group_phone_contact_opt_in;
+      if (!answeredOptIn) {
+        jQuery('.opt-out-wrapper').show();
+        jQuery('.opted-in-statement').hide();
+      }
+    });
+  } else {
+    jQuery('.opt-out-wrapper').show();
+    jQuery('.opted-in-statement').hide();
+  }
+}
+
+var variableExitsAndIsDefined = function(variable){
+  if (typeof variable !== 'undefined' && variable) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+
+var addUserSpecifiedContent = function(){
+  // add background image
+  if ( variableExitsAndIsDefined(backgroundImage) ) {
+    $('#slide1').css('background-image', 'url('+backgroundImage+')');
+  }
+
+  // add header copy
+  $('.donate-header-cont').html($('.donate-header-text').html());
+  // add body copy
+  $('.donate-body-cont').html($('.donate-body-text').html());
+  // add donate cta copy
+  $("#donate-form-outer p:eq(0)").html($('.donate-cta-text').html());
+};
+// Wait for element to exist.
+function elementLoaded(el) {
+  if ($(el).length) {
+    console.log('element is now loaded.');
+    return true;
+  } else {
+    console.log('not loaded, checking again');
+    // Repeat every 500ms.
+    setTimeout(function() {
+      elementLoaded(el)
+    }, 500);
+  }
+};
+
+function movePrivacyStatement() {
+  var $newPrivacyContainer = $('.form-info__text.spacing--no-top').parent(),
+    $privacyStatement = $('.bg--light-grey.padding--10.padding--h20');
+
+  $newPrivacyContainer.html( $privacyStatement.show() );
+  // move country change to after state field
+  $('#state_cd-parent').parent().after($('#country-parent'));
+  $('#country-parent').css({
+    'text-align'    : 'left',
+    'margin-bottom' : '10px'
+  });
+  
+};
+
+function runFinalWrapperCode() {
+  // this is run when we know all js form elements are loaded
+  movePrivacyStatement();
+}
+
+
+$(function(){
+
+  addUserSpecifiedContent();
+  
+    
+});
+
+</script>
+
+<script src="https://secure.greenpeace.org.uk/page/-/forward-action/forwardaction-scripts/jquery-1-10-2.min.js"></script>
+<script>window.jQuery || document.write('<script src="/page/-/greenpeace-modular/v1.3/js/vendor/jquery-1.10.2.min.js"><\/script>')</script>
+<script src="/page/-/greenpeace-modular/v2.0/js/donation-bsd-modular-v1.4.1.6.js?v=ee4rfgdrgfb678e1"></script>
+</html>
